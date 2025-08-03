@@ -128,7 +128,18 @@ Pulse_shape_discrimination/
    - torch==2.6.0
    - torchvision==0.21.0
 
-5. Download the dataset, which is publicly available at [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7974151.svg)](https://doi.org/10.5281/zenodo.7974151).
+5. Download the Companion Dataset from Zenodo
+
+   The complete dataset, pre-trained models, and experimental results are hosted on Zenodo. This companion package is required to reproduce the figures and benchmarks presented in our survey paper.
+
+   - **Download link**: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.16728732.svg)](https://doi.org/10.5281/zenodo.16728732)
+
+   The Zenodo repository contains:
+   - **`Datasets/`**: Raw waveform data for both AmBe and PuBe sources.
+   - **`Experimental Results/`**: Pre-computed models, validation metrics, and summary spreadsheets.
+   - **`PSD Parameters for PuBe Dataset/`**: Python scripts with algorithm parameters tuned for the PuBe dataset.
+
+   Please see the `README.txt` file in the Zenodo bundle for detailed instructions on using this data with the toolbox.
 
 ## Usage
 
