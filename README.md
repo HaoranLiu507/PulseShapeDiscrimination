@@ -3,6 +3,10 @@
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+<p align="center">
+  <img src="Taxonomy Overview.png" alt="Taxonomy Overview" width="2000">
+</p>
+
 ## Table of Contents
 - [Overview](#overview)
 - [Project Description](#project-description)
@@ -20,11 +24,11 @@ The Pulse Shape Discrimination (PSD) project is a comprehensive Python/MATLAB to
 
 - If you find our work useful in your research or publication, please cite our work:
 
-- Haoran Liu, Yihan Zhan, Mingzhe Liu, Yanhua Liu, Peng Li, Runxi Liu, Zhuo Zuo, and Bing-Qi Liu, **"Pulse Shape Discrimination Algorithms: Survey and Benchmark."** *Under Review,* vol. XX, no. XX, pp. XXXX-XXXX, XXX. 2025. [[arXiv](https://doi.org/)]
+- Haoran Liu, Yihan Zhan, Mingzhe Liu, Yanhua Liu, Peng Li, Zhuo Zuo, Bingqi Liu, and Runxi Liu. **"Pulse Shape Discrimination Algorithms: Survey and Benchmark."** *arXiv preprint* arXiv:2508.02750, 2025. [[arXiv](https://arxiv.org/abs/2508.02750)]
 
 ## Project Description
 
-Pulse shape discrimination is essential in radiation detection systems to distinguish between different types of radiation. This project employs a variety of approaches to PSD, incorporating both statistical methods and prior knowledge models. Neutron and gamma-ray discrimination serve as the default application demo for this project. By incorporating additional datasets, other particle types can also be utilized. For a more detailed description of the PSD methods incorporated in this project, as well as comparisons and analyses between these methods, please refer to our review article: [[arXiv](https://doi.org/)].
+Pulse shape discrimination is essential in radiation detection systems to distinguish between different types of radiation. This project employs a variety of approaches to PSD, incorporating both statistical methods and prior knowledge models. Neutron and gamma-ray discrimination serve as the default application demo for this project. By incorporating additional datasets, other particle types can also be utilized. For a more detailed description of the PSD methods incorporated in this project, as well as comparisons and analyses between these methods, please refer to our review article: [[arXiv](https://arxiv.org/abs/2508.02750)].
 
 ### Key Features:
 
@@ -135,9 +139,9 @@ Pulse_shape_discrimination/
    - **Download link**: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.16728732.svg)](https://doi.org/10.5281/zenodo.16728732)
 
    The Zenodo repository contains:
-   - **`Datasets/`**: Raw waveform data for both AmBe and PuBe sources.
-   - **`Experimental Results/`**: Pre-computed models, validation metrics, and summary spreadsheets.
-   - **`PSD Parameters for PuBe Dataset/`**: Python scripts with algorithm parameters tuned for the PuBe dataset.
+   - Datasets: Raw waveform data for both AmBe and PuBe sources.
+   - Experimental Results: Pre-computed models, validation metrics, and summary spreadsheets.
+   - PSD Parameters for PuBe Dataset: Python scripts with algorithm parameters tuned for the PuBe dataset.
 
    Please see the `README.txt` file in the Zenodo bundle for detailed instructions on using this data with the toolbox.
 
