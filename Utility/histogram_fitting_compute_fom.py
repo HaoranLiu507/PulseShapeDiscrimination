@@ -1,10 +1,20 @@
 import numpy as np
 import matplotlib
-matplotlib.use('TkAgg')
-import matplotlib.pyplot as plt
+# Prefer a headless-safe backend by default, but try TkAgg first when available
+try:
+    matplotlib.use('TkAgg')
+    import matplotlib.pyplot as plt  # noqa: E402
+except Exception:
+    matplotlib.use('Agg', force=True)
+    import matplotlib.pyplot as plt  # noqa: E402
 from sklearn.mixture import GaussianMixture
 from typing import Tuple
-import torch
+
+# Torch is optional – handle absence gracefully
+try:  # pragma: no cover - environment dependent
+    import torch as _torch
+except Exception:  # torch not installed or unavailable
+    _torch = None
 
 def histogram_fitting_compute_fom(
     pulse_shape_discrimination_factor: np.ndarray,
@@ -24,9 +34,9 @@ def histogram_fitting_compute_fom(
             - sigma: Standard deviations of the fitted Gaussian components.
             - fom: Figure of Merit calculated from the fitted Gaussian parameters.
     """
-    # Convert torch tensor to numpy if needed
-    if isinstance(pulse_shape_discrimination_factor, torch.Tensor):
-        pulse_shape_discrimination_factor = pulse_shape_discrimination_factor.detach().numpy()
+    # Convert torch tensor to numpy if needed (only if torch is available)
+    if _torch is not None and isinstance(pulse_shape_discrimination_factor, _torch.Tensor):
+        pulse_shape_discrimination_factor = pulse_shape_discrimination_factor.detach().cpu().numpy()
 
     # Check for NaN values
     nan_count = np.sum(np.isnan(pulse_shape_discrimination_factor))
@@ -100,7 +110,10 @@ def histogram_fitting_compute_fom(
     ax2.text(0.75, 0.60, f'FOM = {fom:.4f}', transform=plt.gca().transAxes, fontsize=12,
              bbox=dict(facecolor='white', alpha=0.8))
 
-    if show_plot:
+    # Decide whether to display or save, depending on backend/headless state
+    backend = matplotlib.get_backend().lower()
+    interactive_backend = ('tkagg' in backend) or ('qt' in backend) or ('macosx' in backend)
+    if show_plot and interactive_backend:
         plt.show()
     else:
         plt.savefig(f'fom_plot_{method_name}.jpg', format='jpg', dpi=300)

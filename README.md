@@ -11,16 +11,20 @@
 - [Overview](#overview)
 - [Project Description](#project-description)
 - [Project Structure](#project-structure)
+- [Dataset](#dataset)
 - [Installation](#installation)
 - [Usage](#usage)
+- [Quickstart (Python, example)](#quickstart-python-example)
 - [Methods](#methods)
+- [Extending the toolbox](#extending-the-toolbox)
 - [Contributing](#contributing)
+- [Troubleshooting](#troubleshooting)
 - [License](#license)
 - [Acknowledgments](#acknowledgments)
 
 ## Overview
 
-The Pulse Shape Discrimination (PSD) project is a comprehensive Python/MATLAB toolbox for discriminating between different types of radiation particles based on their pulse shapes in scintillation detector signals. PSD is a critical technique in radiation detection that enables the separation of different particle types based on the characteristic shapes of their pulse signals, which is essential for applications in nuclear security, medical physics, and scientific research.
+The Pulse Shape Discrimination (PSD) project is a comprehensive Python/MATLAB toolbox for discriminating between different types of radiation particles based on their pulse shapes in scintillation detector signals. PSD is critical in radiation detection for nuclear security, medical physics, and scientific research.
 
 - If you find our work useful in your research or publication, please cite our work:
 
@@ -28,71 +32,87 @@ The Pulse Shape Discrimination (PSD) project is a comprehensive Python/MATLAB to
 
 ## Project Description
 
-Pulse shape discrimination is essential in radiation detection systems to distinguish between different types of radiation. This project employs a variety of approaches to PSD, incorporating both statistical methods and prior knowledge models. Neutron and gamma-ray discrimination serve as the default application demo for this project. By incorporating additional datasets, other particle types can also be utilized. For a more detailed description of the PSD methods incorporated in this project, as well as comparisons and analyses between these methods, please refer to our review article: [[arXiv](https://arxiv.org/abs/2508.02750)].
+This toolbox implements a broad collection of PSD algorithms spanning statistical time/frequency-domain methods, neural models, classic machine learning, and modern deep learning. Neutron vs. gamma discrimination is provided as a default demo. With your own datasets, other particle types can be used as well. For detailed discussions and benchmarking across methods, see our survey: [[arXiv](https://arxiv.org/abs/2508.02750)].
 
-### Key Features:
+### Key Features
 
-- **Multiple PSD Methodologies**: Implements time-domain, frequency-domain, neural network, machine learning, and deep learning approaches
-- **Flexible Pre-processing**: Various signal filtering options including Butterworth, Chebyshev, Elliptic, and Wavelet filters
-- **Comprehensive Evaluation**: Tools for computing the Figure of Merit (FOM) to quantitatively evaluate discrimination performance
-- **Modular Design**: Easy to extend with new algorithms and methods
-- **Two Task Types**: Supports both classification (particle class identification) and regression (PSD factor prediction)
-- **MATLAB Support**: Includes MATLAB implementations for time-domain, frequency-domain, and neural network methods
+- **Multiple methodologies**: Time-domain, frequency-domain, neural network (spiking), machine learning, and deep learning
+- **Flexible pre-processing**: Built-in filters (Butterworth, Chebyshev, Elliptic, Fourier, LMS, Median, Morphological, Moving Average, Wavelet, Wiener, Windowed-Sinc)
+- **Comprehensive evaluation**: Figure of Merit (FOM) computation via histogram fitting
+- **Modular design**: Clean extension points for new algorithms
+- **Two task types**: Classification (labels) and regression (PSD factor)
+- **MATLAB support**: MATLAB implementations for time/frequency-domain and spiking neural methods
 
 ## Project Structure
 
-The project is organized into the following directories:
+The project is organized as follows (directories like `Data/` and `Output/` are created or populated at runtime or by downloading the companion dataset):
 
 ```
-Pulse_shape_discrimination/
-├── Data/                      # Contains input data files
-│   ├── Reference_signal/      # Reference signals for GP and LLR methods
+PulseShapeDiscrimination/
+├── Data/                      # Input data (see Dataset section)
+│   ├── Reference_signal/      # Reference signals for GP and LLR
 │   ├── Test/                  # Testing datasets
 │   ├── Train/                 # Training datasets
 │   └── Validation/            # Validation datasets
 │
-├── MATLAB/                    # Contains Statistical methods in MATLAB
-│   ├── Data/                  # MATLAB data files
-│   ├── Method/                # MATLAB implementations of PSD methods
-│   ├── Utility/               # MATLAB utility functions
-│   ├── Frequency_domain_main.m # Main MATLAB script for frequency domain methods
-│   ├── Neural_network_main.m   # Main MATLAB script for neural network methods
-│   └── Time_domain_main.m      # Main MATLAB script for time domain methods
+├── MATLAB/                    # MATLAB implementations
+│   ├── Method/                # Statistical & spiking neural methods
+│   ├── Utility/               # MATLAB utilities
+│   ├── Frequency_domain_main.m
+│   ├── Neural_network_main.m
+│   └── Time_domain_main.m
 │
-├── Method/                    # Contains all PSD methodologies
-│   ├── Prior_knowledge_methods/       # Model-based methods
-│   │   ├── Deep_learning/             # CNN, LSTM, MLP, etc.
-│   │   └── Machine_learning/          # SVM, KNN, DT, etc.
-│   │
-│   └── Statistical_methods/           # Statistical approaches
-│       ├── Frequency_domain/          # WT, DFT, FGA, etc.
-│       ├── Neural_network/            # SCM, PCNN, etc.
-│       └── Time_domain/               # CC, CI, PGA, etc.
+├── Method/                    # All PSD methodologies (Python)
+│   ├── Prior_knowledge_methods/
+│   │   ├── Deep_learning/     # CNN, LSTM, MLP, Transformer, etc.
+│   │   └── Machine_learning/  # SVM, KNN, DT, GMM, LVQ, etc.
+│   └── Statistical_methods/
+│       ├── Frequency_domain/  # WT, DFT, FGA, FS, SD, SDCC
+│       ├── Neural_network/    # SCM, PCNN, RCNN, HQC, LG
+│       └── Time_domain/       # CC, CI, GP, LLR, LMT, PR, ZC, PCA, PGA, FEPS
 │
-├── Output/                    # Output results directory
-│   ├── Trained_models/        # Saved trained models
-│   └── Validation_results/    # Results from validation
+├── Output/                    # Created at runtime for results
+│   ├── Trained_models/        # Saved models (method-dependent)
+│   └── Validation_results/    # Validation outputs (.txt, plots)
 │
-├── Utility/                   # Utility functions and tools
-│   ├── filters.py             # Signal filtering implementations
+├── Utility/                   # Utilities (Python)
+│   ├── filters.py             # Signal filtering
 │   ├── histogram_fitting_compute_fom.py # FOM calculation
 │   └── Tempotron.py           # Tempotron neural model
 │
-├── Deep_learning_main.py      # Main executable for DL methods
-├── Frequency_domain_main.py   # Main executable for frequency domain methods
-├── Machine_learning_main.py   # Main executable for ML methods
-├── Neural_network_main.py     # Main executable for neural network methods
-├── README.md                  # This file
-├── requirements.txt           # Required Python packages
-└── Time_domain_main.py        # Main executable for time domain methods
+├── Deep_learning_main.py
+├── Frequency_domain_main.py
+├── Machine_learning_main.py
+├── Neural_network_main.py
+├── Time_domain_main.py
+├── README.md
+└── requirements.txt
 ```
+
+## Dataset
+
+The companion dataset, pre-trained models, and experimental results are hosted on Zenodo and are required to reproduce the figures and benchmarks in the survey paper.
+
+- Download: [Zenodo DOI](https://doi.org/10.5281/zenodo.16728732)
+- After download, extract or place the folders so they appear under `PulseShapeDiscrimination/Data/` (and optionally `Output/` if provided). The default Python scripts expect these files:
+  - `Data/Train/EJ299_33_AmBe_9414_neutron_train.txt`
+  - `Data/Train/EJ299_33_AmBe_9414_gamma_train.txt`
+  - `Data/Test/EJ299_33_AmBe_9414_neutron_test.txt`
+  - `Data/Test/EJ299_33_AmBe_9414_gamma_test.txt`
+  - `Data/Validation/EJ299_33_AmBe_9414.txt`
+  - `Data/Reference_signal/EJ299_33_AmBe_9414_neutron_ref.txt` (for GP/LLR)
+  - `Data/Reference_signal/EJ299_33_AmBe_9414_gamma_ref.txt` (for GP/LLR)
+
+Data format: each `.txt` file is a numeric matrix with shape `(num_signals, num_samples)`, one pulse waveform per row.
+
+MATLAB note: the `.m` demos expect `EJ299_33_AmBe_9414.txt` to be on the MATLAB path or in the same folder as the `.m` file; adjust the `importdata` path in `MATLAB/*_main.m` if you keep data under `Data/`.
 
 ## Installation
 
 ### Prerequisites
 - Python 3.12 or higher
-- MATLAB R2023a or higher
-- CUDA toolkit (for GPU support)
+- MATLAB R2023a or higher (only for MATLAB implementations)
+- Optional: CUDA toolkit for GPU-accelerated deep learning
 
 ### Setup
 
@@ -118,7 +138,7 @@ Pulse_shape_discrimination/
    pip install -r requirements.txt
    ```
 
-4. Install PyTorch:
+4. Install PyTorch (optional unless using deep learning), and any optional extras:
    ```bash
    # For the version used in development (with CUDA 12.6):
    pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126
@@ -128,26 +148,37 @@ Pulse_shape_discrimination/
    # to select the appropriate PyTorch installation command for your system
    ```
 
-   The development versions used were:
-   - torch==2.6.0
-   - torchvision==0.21.0
+   Optional extras:
+   - `mamba_ssm` for the Mamba model: `pip install mamba-ssm`
 
-5. Download the Companion Dataset from Zenodo
+   Development versions used:
+   - torch==2.6.0, torchvision==0.21.0
 
-   The complete dataset, pre-trained models, and experimental results are hosted on Zenodo. This companion package is required to reproduce the figures and benchmarks presented in our survey paper.
+5. Download the companion dataset from Zenodo
 
-   - **Download link**: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.16728732.svg)](https://doi.org/10.5281/zenodo.16728732)
+   - **Download link**: [Zenodo DOI](https://doi.org/10.5281/zenodo.16728732)
+   - Contents include: datasets (AmBe, PuBe), pre-computed results, and per-dataset PSD parameters.
+   - Place the extracted `Data/` folder into the project root. Refer to Dataset section above.
 
-   The Zenodo repository contains:
-   - Datasets: Raw waveform data for both AmBe and PuBe sources.
-   - Experimental Results: Pre-computed models, validation metrics, and summary spreadsheets.
-   - PSD Parameters for PuBe Dataset: Python scripts with algorithm parameters tuned for the PuBe dataset.
+   See the Zenodo `README.txt` for additional details.
 
-   Please see the `README.txt` file in the Zenodo bundle for detailed instructions on using this data with the toolbox.
+### Notes on plotting backends
+
+The FOM plotting utility selects Matplotlib's `TkAgg` backend in `Utility/histogram_fitting_compute_fom.py`. On headless systems or if Tk is not installed, do one of the following:
+- edit `Utility/histogram_fitting_compute_fom.py` and change `matplotlib.use('TkAgg')` to `matplotlib.use('Agg')`; and/or
+- call `histogram_fitting_compute_fom(..., show_plot=False)` so plots are saved to files instead of shown.
+
+### Notes on Tempotron (GPU-only)
+
+The Tempotron implementation requires a CUDA-capable NVIDIA GPU and a CUDA-enabled PyTorch build. CPU (and Apple `mps`) execution is not supported.
+
+- Ensure `python -c "import torch; print(torch.cuda.is_available())"` prints `True`.
+- Install the correct CUDA wheel for your system (see PyTorch site), and make sure the NVIDIA driver is installed.
+- The low-level class in `Utility/Tempotron.py` uses `cuda:0` by default. If you need to select another GPU, set `CUDA_VISIBLE_DEVICES` accordingly or adjust the file locally.
 
 ## Usage
 
-The project provides separate main scripts for different PSD methodologies:
+The project provides separate main scripts for different PSD methodologies. All Python entry points are interactive and will prompt for filter choice, task (where applicable), method, and whether to train or load a model.
 
 ### Statistical Methods (Time Domain)
 ```bash
@@ -175,28 +206,107 @@ python Deep_learning_main.py
 ```
 
 ### MATLAB
-To run the MATLAB implementations, open MATLAB, navigate to the MATLAB/ directory, and execute one of the main scripts. For example:
+Open MATLAB, navigate to the `MATLAB/` directory, and run a main script. For example:
 ```matlab
 run('Time_domain_main.m');
 ```
-Repeat similarly for Frequency_domain_main.m and Neural_network_main.m.
+Repeat similarly for `Frequency_domain_main.m` and `Neural_network_main.m`.
+
+### Quickstart (Python, example)
+
+The following transcript shows a typical deep learning classification run:
+
+1) Run: `python Deep_learning_main.py`
+2) When prompted for filter: enter `0` (no filter) for a first run
+3) Task: enter `c` for classification
+4) Method: enter `MLP1` (or try `CNNDEEP`, `GRU`, etc.)
+5) Train? enter `y` to train a new model
+6) Validation? optional; enter `n` to skip on first run
+
+Results and any saved outputs will appear under `Output/` (method-dependent). For regression tasks, you will additionally be asked to select a feature extractor used to compute target PSD factors.
+
+### Command-line (non-interactive) usage
+
+All main scripts now accept CLI flags. If a required flag is missing, the script will prompt interactively for that item only.
+
+- Deep learning (`Deep_learning_main.py`)
+  - Flags: `--task {classification,regression}`, `--method <MLP1|MLP2|MLP3|CNNDEEP|CNNFT|CNNSHAL|CNNSP|CNNSTFT|CNNWT|ENN|GRU|LSTM|RNN|TRAN|MAM>`, `--feat <CC|GP|...>` (when task=regression), `--filter {0..11}`, `--train {yes,no}`, `--validate {yes,no}`
+  - Example (classification, train, no validation):
+    ```bash
+    python Deep_learning_main.py --task classification --method MLP1 --filter 0 --train yes --validate no
+    ```
+  - Example (regression with CC features, train and validate):
+    ```bash
+    python Deep_learning_main.py --task regression --feat CC --method CNNDEEP --filter 1 --train yes --validate yes
+    ```
+
+- Machine learning (`Machine_learning_main.py`)
+  - Flags: `--task {classification,regression}`, `--method <BDT|DT|FCM|GMM|KNN|LINRE|LOGRE|LRSTFT|LVQ|SVM|TEM>`, `--feat <...>` (when task=regression), `--filter {0..11}`, `--train {yes,no}`, `--validate {yes,no}`
+  - Example:
+    ```bash
+    python Machine_learning_main.py --task classification --method SVM --filter 0 --train yes --validate no
+    ```
+
+- Time-domain statistical (`Time_domain_main.py`)
+  - Flags: `--method <CC|CI|FEPS|GP|LLR|LMT|PCA|PGA|PR|ZC>`, `--filter {0..11}`
+  - Example:
+    ```bash
+    python Time_domain_main.py --method PR --filter 0
+    ```
+
+- Frequency-domain statistical (`Frequency_domain_main.py`)
+  - Flags: `--method <FGA|SDCC|DFT|WT1|WT2|FS|SD>`, `--filter {0..11}`
+  - Example:
+    ```bash
+    python Frequency_domain_main.py --method SD --filter 9
+    ```
+
+- Spiking neural models (`Neural_network_main.py`)
+  - Flags: `--method <HQC|LG|PCNN|RCNN|SCM>`, `--filter {0..11}`, `--validate {yes,no}`
+  - Example:
+    ```bash
+    python Neural_network_main.py --method SCM --filter 0 --validate yes
+    ```
+
+Notes:
+- When any CLI flag is provided, interactive plotting is disabled and Figures of Merit will be saved to files instead of displayed.
+- You can always run `python <main>.py --help` to see the available flags.
+
+Filter IDs (0–11):
+- 0: No Filter
+- 1: Butterworth
+- 2: Chebyshev (Type I)
+- 3: Elliptic
+- 4: Fourier (low‑pass in frequency domain)
+- 5: Least Mean Square (LMS) adaptive
+- 6: Median
+- 7: Morphological (open/close)
+- 8: Moving Average
+- 9: Wavelet (db4)
+- 10: Wiener
+- 11: Windowed‑Sinc (FIR)
+
+Sampling frequency note: for demonstration purposes the main scripts set `fs = 1000` Hz to parameterize filters. If your signals were sampled at a different rate, adjust `fs` (and filter parameters) near the top of each `*_main.py`.
 
 ### General Workflow
 
-1. **Choose Method**: Select the appropriate main script based on the method you want to use
-2. **Apply Filtering** *(Python only)*: Select a filter to apply to the signals (or no filter)
-3. **Select Task Type** *(ML/DL only)*: Choose between classification or regression task
-4. **Choose Algorithm**: Select a specific PSD method from the available options
-5. **Model Selection** *(ML/DL only)*: Choose to train a new model or load a pre-trained one
-6. **Model Training** *(ML/DL only)*: Train and test the selected model
-7. **Validation**: Evaluate on validation data
-8. **Results Analysis**: View and analyze results in the Output directory *(Python only - MATLAB implementations do not save output as files)*
+1. **Choose entry point**: one of the main scripts per method family
+2. **Filtering**: optional signal denoising/filter selection
+3. **Task**: choose classification or regression (ML/DL only)
+4. **Method**: choose a PSD algorithm from the prompts
+5. **Train or load**: ML/DL scripts support training or loading
+6. **Evaluate**: automatic test-set evaluation; optional validation-set evaluation
+7. **Analyze results**: view metrics, figures, and any saved outputs
 
 **Notes:**
-* MATLAB implementations are provided for statistical methods, as many researchers in the PSD field are more familiar with MATLAB. However, machine learning and deep learning methods are only available in Python due to better library support.
-* We recommend using the Python implementations for all methods due to their more mature functionality (filters, visualization, etc.). If you only intend to use Python, you can disregard the MATLAB directory.
-* This repository uses a dataset detected from an AmBe neutron source by default. If you want to use other datasets, please change the path of data loading at the head of the main function of each PSD method category. For example, see lines 43-47 of 'Deep_learning_main.py'.
-* **Important:** There are a few PSD methods (including GP, LLR, and SD) that require reference signals loaded from separate .txt files. If you changed the dataset, please make sure you update the reference signal from your new dataset. The reference loading procedure can be found in the PSD method .py file. For example, see lines 173-174 of 'Method\Statistical_methods\Frequency_domain\sd.py'.
+- MATLAB implementations are provided for statistical methods; ML/DL methods are Python-only.
+- Python implementations are generally more feature-complete (filters, visualization).
+- Default dataset is AmBe. To switch datasets, update the file paths near the top of each `*_main.py`.
+- Some methods require additional data: GP and LLR need reference signals under `Data/Reference_signal/`, and SD builds a discrimination mask from training data.
+
+### Non-interactive usage
+
+Use the CLI flags described above to run in non-interactive mode. Missing flags will be prompted.
 
 ## Methods
 
@@ -236,10 +346,10 @@ Repeat similarly for Frequency_domain_main.m and Neural_network_main.m.
 - **K-Nearest Neighbors (KNN)**: Uses segment-based features for KNN
 - **Linear Regression (LINRE)**: Predicts PSD factors using PCA and linear regression
 - **Logistic Regression (LOGRE)**: Performs binary classification with PCA-based features
-- **Linear Regression with Short-Time Fourier Transform (LRSTFT)**: Combines STFT features with linear regression
+- **Logistic Regression with Short-Time Fourier Transform (LRSTFT)**: Combines STFT features with logistic regression
 - **Learning Vector Quantization (LVQ)**: Uses competitive learning with prototype vectors for classification
 - **Support Vector Machine (SVM)**: Classifies using tail-to-total ratio and total charge features
-- **Tempotron**: Implements a spiking neural network for classification
+- **Tempotron (GPU/CUDA required)**: Implements a spiking neural network for classification
 
 ### Deep Learning Methods
 - **Convolutional Neural Network Variants**:
@@ -275,6 +385,19 @@ Repeat similarly for Frequency_domain_main.m and Neural_network_main.m.
 - **Transformer Network (TRAN)**: Attention-based architecture for classification and regression
 - **Mamba Network (MAM)**: State space model for classification and regression
 
+## Extending the toolbox
+
+Adding a new method is straightforward:
+
+- Statistical methods (time/frequency/spiking): implement `get_psd_factor(data: np.ndarray) -> np.ndarray` in a new module under the appropriate `Method/Statistical_methods/...` subfolder and import it in the corresponding main script mapping.
+- ML/DL methods: implement the following functions in `Method/Prior_knowledge_methods/...` modules so they can be discovered from the main scripts:
+  - `get_supported_tasks() -> list[str]` returning `['classification']`, `['regression']`, or both
+  - `train(data: np.ndarray, labels: np.ndarray, task: str, feat_name: Optional[str]) -> None`
+  - `load_model(task: str, feat_name: Optional[str]) -> None`
+  - `test(data: np.ndarray, task: str, feat_name: Optional[str]) -> np.ndarray`
+
+Please also document method references and default hyperparameters in module-level docstrings.
+
 ## Contributing
 
 Although this project incorporates most PSD algorithms developed over the last five decades, there are still methods that have not been included, as well as newly emerged approaches. Contributions to this project are welcome! Here's how you can contribute:
@@ -285,16 +408,24 @@ Although this project incorporates most PSD algorithms developed over the last f
 4. Push to the branch: `git push origin feature-name`
 5. Submit a pull request
 
-### Guidelines:
+### Guidelines
 - Follow the existing code style and organization
-- Add appropriate comments and documentation
-- Include test cases for new features
-- Update the README if necessary with new information
+- Add concise docstrings where needed (focus on why, not how)
+- Include basic sanity checks or tests where practical
+- Update the README if necessary
+
+## Troubleshooting
+
+- **Matplotlib/Tk errors on headless systems**: set `MPLBACKEND=Agg` or edit calls to `histogram_fitting_compute_fom(..., show_plot=False)` to save plots instead of showing them.
+- **Shape errors**: Ensure `.txt` files are 2D arrays with one pulse per row.
+- **NaN warnings**: Some methods may produce NaNs for certain signals/parameters. The scripts remove NaNs and continue; consider adjusting method hyperparameters.
+- **Unsupervised clustering label flips (ML)**: The ML entry point automatically flips labels when needed via majority voting.
+- **Tempotron fails to run / device errors**: Tempotron requires CUDA-enabled PyTorch and an NVIDIA GPU. Verify `torch.cuda.is_available()` is True, install the correct CUDA wheel, update your GPU drivers, and (optionally) set `CUDA_VISIBLE_DEVICES` to choose a GPU.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgments
 
-Thanks to the researchers in the field of radiation detection and pulse shape discrimination. References for each PSD method can be found in their corresponding Python files.
+Thanks to the researchers in the field of radiation detection and pulse shape discrimination. References for each PSD method can be found in the corresponding Python files.

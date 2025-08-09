@@ -1,0 +1,65 @@
+# === Datasets (keep structure placeholders only) ===
+/Data/*
+!/Data/.gitkeep
+!/Data/README.md
+!/Data/**/.gitkeep
+
+# === Outputs (results, models, plots) ===
+/Output/*
+!/Output/.gitkeep
+!/Output/README.md
+!/Output/**/.gitkeep
+
+# Model artifacts anywhere (safety net)
+*.pth
+*.pt
+*.joblib
+*.pkl
+*.onnx
+*.sav
+
+# Logs and run artifacts
+*.log
+
+# === Python caches/build ===
+__pycache__/
+*.py[cod]
+*.so
+*.dylib
+*.dll
+.build/
+dist/
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Virtual environments and local config
+.venv/
+venv/
+ENV/
+.env
+.env.*
+.cache/
+
+# Linters/test caches (if added later)
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# OS junk
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+desktop.ini
+
+# IDE settings (optional)
+/.vscode/
+/.idea/
+
+# MATLAB autosave/backups
+**/*.asv
+**/*~
+
+

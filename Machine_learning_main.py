@@ -1,4 +1,5 @@
 import os
+import argparse
 import numpy as np
 import importlib
 import time
@@ -58,6 +59,24 @@ def fix_flipped_labels(predictions, true_labels):
 
 
 def main() -> None:
+    # CLI (optional). If any flags are missing, fall back to interactive prompts
+    parser = argparse.ArgumentParser(description="Machine Learning PSD entry point (interactive by default; CLI flags optional)")
+    parser.add_argument("--task", type=str, choices=["classification", "regression"], help="Task type")
+    parser.add_argument("--method", type=str, help="ML method (e.g., DT, SVM, GMM, TEM, ...)")
+    parser.add_argument("--feat", type=str, help="Feature extractor when task=regression (e.g., CC, GP, SD, ...)")
+    parser.add_argument("--filter", type=int, choices=list(range(0, 12)), help="Filter id (0-11)")
+    parser.add_argument("--train", type=str, choices=["yes", "no"], help="Whether to train a new model")
+    parser.add_argument("--validate", type=str, choices=["yes", "no"], help="Whether to run validation evaluation")
+    args = parser.parse_args()
+    # Determine CLI mode (any flag provided)
+    cli_mode = any(v is not None for v in vars(args).values())
+    if cli_mode:
+        # Disable interactive plots globally
+        try:
+            import matplotlib.pyplot as plt  # type: ignore
+            plt.show = lambda *a, **k: None  # no-op
+        except Exception:
+            pass
     # Load and normalize data
     data_train_1 = load_dataset(os.path.join('Data', 'Train', 'EJ299_33_AmBe_9414_neutron_train.txt'))
     data_train_2 = load_dataset(os.path.join('Data', 'Train', 'EJ299_33_AmBe_9414_gamma_train.txt'))
@@ -86,18 +105,22 @@ def main() -> None:
         '11': ('Windowed-Sinc Filter', partial(filters.windowed_sinc_filter, cutoff_freq=200, fs=fs, numtaps=51, window='hamming')),
     }
 
-    # Prompt user to select a filter
-    print("Select a filter to apply:")
-    for key, (name, _) in filter_options.items():
-        print(f"{key}: {name}")
-    choice = input("Enter the number of the filter (0 for no filter): ")
-
-    # Validate the choice; default to no filter if invalid
-    if choice not in filter_options:
-        print("\nInvalid choice. Proceeding with no filter.")
-        choice = '0'
+    # Prompt user to select a filter (unless provided by CLI)
+    if args.filter is None:
+        print("Select a filter to apply:")
+        for key, (name, _) in filter_options.items():
+            print(f"{key}: {name}")
+        choice = input("Enter the number of the filter (0 for no filter): ")
+        if choice not in filter_options:
+            print("\nInvalid choice. Proceeding with no filter.")
+            choice = '0'
+        else:
+            print("\nStart filtering...")
     else:
-        print("\nStart filtering...")
+        choice = str(args.filter)
+        if choice not in filter_options:
+            print("\nInvalid --filter provided. Proceeding with no filter.")
+            choice = '0'
 
     # Get the selected filter function
     selected_filter = filter_options[choice][1]
@@ -221,20 +244,32 @@ def main() -> None:
         "regr": "regression",
         "r": "regression"
     }
-    task = input('Enter "classification" (or "c") or "regression" (or "r"): ').strip().lower()
-    while task not in task_mapping:
-        print('Invalid choice.')
+    if args.task is None:
         task = input('Enter "classification" (or "c") or "regression" (or "r"): ').strip().lower()
+        while task not in task_mapping:
+            print('Invalid choice.')
+            task = input('Enter "classification" (or "c") or "regression" (or "r"): ').strip().lower()
+    else:
+        task = args.task.strip().lower()
+        if task not in task_mapping:
+            print(f"Invalid --task '{args.task}'.")
+            return
     task = task_mapping[task]
 
     # If regression, choose feature extractor for training PSD factors
     if task == 'regression':
-        print('\nSelect a feature extractor to compute PSD factors for training:')
-        print('\n'.join(available_feature_extractors))
-        feat_name = input('Enter the feature extractor name (e.g., cc): ').strip().upper()
-        while feat_name not in feature_extractor_modules:
-            print(f"Invalid name. Available extractors: {', '.join(feature_extractor_modules.keys())}")
-            feat_name = input('Enter the feature extractor name: ').strip().upper()
+        if args.feat is None:
+            print('\nSelect a feature extractor to compute PSD factors for training:')
+            print('\n'.join(available_feature_extractors))
+            feat_name = input('Enter the feature extractor name (e.g., cc): ').strip().upper()
+            while feat_name not in feature_extractor_modules:
+                print(f"Invalid name. Available extractors: {', '.join(feature_extractor_modules.keys())}")
+                feat_name = input('Enter the feature extractor name: ').strip().upper()
+        else:
+            feat_name = args.feat.strip().upper()
+            if feat_name not in feature_extractor_modules:
+                print(f"Invalid --feat '{args.feat}'. Available: {', '.join(feature_extractor_modules.keys())}")
+                return
         feat_module_name = feature_extractor_modules[feat_name]
         try:
             feat_module = importlib.import_module(feat_module_name)
@@ -248,12 +283,18 @@ def main() -> None:
         feat_name = None
 
     # Choose PSD method
-    print('\nSelect a PSD method from the following options:')
-    print('\n'.join(available_psd_methods))
-    method_name = input('Enter the method name (e.g., mlp1): ').strip().upper()
-    while method_name not in psd_method_modules:
-        print(f"Invalid method name. Available methods: {', '.join(psd_method_modules.keys())}")
-        method_name = input('Enter the method name: ').strip().upper()
+    if args.method is None:
+        print('\nSelect a PSD method from the following options:')
+        print('\n'.join(available_psd_methods))
+        method_name = input('Enter the method name (e.g., dt): ').strip().upper()
+        while method_name not in psd_method_modules:
+            print(f"Invalid method name. Available methods: {', '.join(psd_method_modules.keys())}")
+            method_name = input('Enter the method name: ').strip().upper()
+    else:
+        method_name = args.method.strip().upper()
+        if method_name not in psd_method_modules:
+            print(f"Invalid --method '{args.method}'. Available: {', '.join(psd_method_modules.keys())}")
+            return
     module_name = psd_method_modules[method_name]
     try:
         method_module = importlib.import_module(module_name)
@@ -279,11 +320,17 @@ def main() -> None:
         "no": "no",
         "n": "no"
     }
-    choice = input('Is training required? (yes/y/no/n): ').strip().lower()
-    while choice not in choice_mapping:
-        print('Invalid choice. Please enter "yes", "y", "no", or "n".')
+    if args.train is None:
         choice = input('Is training required? (yes/y/no/n): ').strip().lower()
-    choice = choice_mapping[choice]
+        while choice not in choice_mapping:
+            print('Invalid choice. Please enter "yes", "y", "no", or "n".')
+            choice = input('Is training required? (yes/y/no/n): ').strip().lower()
+        choice = choice_mapping[choice]
+    else:
+        choice = args.train.strip().lower()
+        if choice not in choice_mapping:
+            print(f"Invalid --train '{args.train}'. Use yes or no.")
+            return
     if choice == 'yes':
         if not hasattr(method_module, 'train'):
             print(f"Error: {module_name} does not implement a 'train' function.")
@@ -332,7 +379,7 @@ def main() -> None:
         accuracy = np.mean(fixed_predictions == Test_labels)
         print("Test set accuracy: {:.2f}%".format(accuracy * 100))
     else:  # regression
-        miu, sigma, fom = histogram_fitting_compute_fom(Test_pred, method_name + "_test", show_plot=True)
+        miu, sigma, fom = histogram_fitting_compute_fom(Test_pred, method_name + "_test", show_plot=(not cli_mode))
         print(f"Test set PSD factors computed. Figure of Merit (FOM): {fom}")
         print(f"Sample of Test PSD factors: {Test_pred[:5]}")
 
@@ -343,11 +390,17 @@ def main() -> None:
         "no": "no",
         "n": "no"
     }
-    choice = input('\nPerform evaluation on the validation set? (yes/y/no/n): ').strip().lower()
-    while choice not in choice_mapping:
-        print('Invalid choice. Please enter "yes", "y", "no", or "n".')
-        choice = input('Perform evaluation on the validation set? (yes/y/no/n): ').strip().lower()
-    choice = choice_mapping[choice]
+    if args.validate is None:
+        choice = input('\nPerform evaluation on the validation set? (yes/y/no/n): ').strip().lower()
+        while choice not in choice_mapping:
+            print('Invalid choice. Please enter "yes", "y", "no", or "n".')
+            choice = input('Perform evaluation on the validation set? (yes/y/no/n): ').strip().lower()
+        choice = choice_mapping[choice]
+    else:
+        choice = args.validate.strip().lower()
+        if choice not in choice_mapping:
+            print(f"Invalid --validate '{args.validate}'. Use yes or no.")
+            return
     if choice == 'yes':
         print('\nEvaluating on the validation set...', flush=True)
         validation_start = time.time()
@@ -364,7 +417,7 @@ def main() -> None:
         else:  # regression
             # Normalize Validation_pred to range [0, 1]
             Validation_pred = (Validation_pred - np.min(Validation_pred)) / (np.max(Validation_pred) - np.min(Validation_pred))
-            miu, sigma, fom = histogram_fitting_compute_fom(Validation_pred, method_name, show_plot=True)
+            miu, sigma, fom = histogram_fitting_compute_fom(Validation_pred, method_name, show_plot=(not cli_mode))
             print(f"Validation set PSD factors computed. Figure of Merit (FOM): {fom}")
             print(f"Sample of Validation PSD factors: {Validation_pred[:5]}")
             np.savetxt(f'Output/Validation_results/{method_name}_{task}_{feat_name}.txt', Validation_pred, fmt='%1.6f')

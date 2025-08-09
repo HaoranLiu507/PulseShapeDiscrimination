@@ -1,4 +1,5 @@
 import os
+import argparse
 import numpy as np
 import importlib
 import time
@@ -42,6 +43,20 @@ def normalize(data: np.ndarray) -> np.ndarray:
     return normalized_data
 
 def main() -> None:
+    # CLI (optional). If any flags are missing, fall back to interactive prompts
+    parser = argparse.ArgumentParser(description="Frequency-domain statistical PSD entry point (interactive by default; CLI flags optional)")
+    parser.add_argument("--method", type=str, help="Method (FGA, SDCC, DFT, WT1, WT2, FS, SD)")
+    parser.add_argument("--filter", type=int, choices=list(range(0, 12)), help="Filter id (0-11)")
+    args = parser.parse_args()
+    # Determine CLI mode (any flag provided)
+    cli_mode = any(v is not None for v in vars(args).values())
+    if cli_mode:
+        # Disable interactive plots globally
+        try:
+            import matplotlib.pyplot as plt  # type: ignore
+            plt.show = lambda *a, **k: None  # no-op
+        except Exception:
+            pass
     # Load data
     data_file = os.path.join('Data', 'Validation', 'EJ299_33_AmBe_9414.txt')
     pulse_signal_original = load_dataset(data_file)
@@ -65,18 +80,22 @@ def main() -> None:
         '11': ('Windowed-Sinc Filter', partial(filters.windowed_sinc_filter, cutoff_freq=200, fs=fs, numtaps=51, window='hamming')),
     }
 
-    # Prompt user to select a filter
-    print("Select a filter to apply:")
-    for key, (name, _) in filter_options.items():
-        print(f"{key}: {name}")
-    choice = input("Enter the number of the filter (0 for no filter): ")
-
-    # Validate the choice; default to no filter if invalid
-    if choice not in filter_options:
-        print("\nInvalid choice. Proceeding with no filter.")
-        choice = '0'
+    # Prompt user to select a filter (unless provided by CLI)
+    if args.filter is None:
+        print("Select a filter to apply:")
+        for key, (name, _) in filter_options.items():
+            print(f"{key}: {name}")
+        choice = input("Enter the number of the filter (0 for no filter): ")
+        if choice not in filter_options:
+            print("\nInvalid choice. Proceeding with no filter.")
+            choice = '0'
+        else:
+            print("\nStart filtering...")
     else:
-        print("\nStart filtering...")
+        choice = str(args.filter)
+        if choice not in filter_options:
+            print("\nInvalid --filter provided. Proceeding with no filter.")
+            choice = '0'
 
     # Get the selected filter function and apply it
     selected_filter = filter_options[choice][1]
@@ -111,9 +130,12 @@ def main() -> None:
     pulse_shape_discrimination_factor = None
 
     while pulse_shape_discrimination_factor is None:
-        print('Select a PSD method from the following options:')
-        print('\n'.join(available_methods))
-        method_name = input('Enter the method name (e.g., FGA): ').upper().strip()
+        if args.method is None:
+            print('Select a PSD method from the following options:')
+            print('\n'.join(available_methods))
+            method_name = input('Enter the method name (e.g., FGA): ').upper().strip()
+        else:
+            method_name = args.method.strip().upper()
 
         if method_name in method_modules:
             module_name = method_modules[method_name]
@@ -145,7 +167,7 @@ def main() -> None:
         ) / (
             np.max(pulse_shape_discrimination_factor) - np.min(pulse_shape_discrimination_factor)
         )
-        miu, sigma, fom = histogram_fitting_compute_fom(pulse_shape_discrimination_factor, method_name, show_plot=True)
+        miu, sigma, fom = histogram_fitting_compute_fom(pulse_shape_discrimination_factor, method_name, show_plot=(not cli_mode))
         print(f"Validation set PSD factors computed. Figure of Merit (FOM): {fom}")
         print(f"Sample of Validation PSD factors: {pulse_shape_discrimination_factor[:5]}")
         np.savetxt(f'Output/Validation_results/{method_name}.txt', pulse_shape_discrimination_factor, fmt='%1.6f')
