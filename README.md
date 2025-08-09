@@ -164,9 +164,11 @@ MATLAB note: the `.m` demos expect `EJ299_33_AmBe_9414.txt` to be on the MATLAB 
 
 ### Notes on plotting backends
 
-The FOM plotting utility selects Matplotlib's `TkAgg` backend in `Utility/histogram_fitting_compute_fom.py`. On headless systems or if Tk is not installed, do one of the following:
-- edit `Utility/histogram_fitting_compute_fom.py` and change `matplotlib.use('TkAgg')` to `matplotlib.use('Agg')`; and/or
-- call `histogram_fitting_compute_fom(..., show_plot=False)` so plots are saved to files instead of shown.
+The FOM plotting utility will try to use Matplotlib's `TkAgg` backend and automatically fall back to `Agg` if `TkAgg` is unavailable. In most cases you do not need to change the backend manually.
+
+- If you are running on a headless system or prefer non-interactive behavior, use the CLI flags so that the main scripts disable interactive plotting and save FOM figures automatically during test/validation, or call `histogram_fitting_compute_fom(..., show_plot=False)` directly.
+- Saved figures are written to the current working directory as `fom_plot_{method_name}.jpg`.
+- Note: because the code sets the backend explicitly, an environment variable like `MPLBACKEND=Agg` may be overridden by the script.
 
 ### Notes on Tempotron (GPU-only)
 
@@ -269,7 +271,7 @@ All main scripts now accept CLI flags. If a required flag is missing, the script
     ```
 
 Notes:
-- When any CLI flag is provided, interactive plotting is disabled and Figures of Merit will be saved to files instead of displayed.
+- When any CLI flag is provided, interactive plotting is disabled. The entry scripts save FOM figures to files during test/validation. Some method modules may still attempt plots during training; those are suppressed in CLI mode and may not be saved unless the module passes `show_plot=False`.
 - You can always run `python <main>.py --help` to see the available flags.
 
 Filter IDs (0–11):
@@ -416,7 +418,7 @@ Although this project incorporates most PSD algorithms developed over the last f
 
 ## Troubleshooting
 
-- **Matplotlib/Tk errors on headless systems**: set `MPLBACKEND=Agg` or edit calls to `histogram_fitting_compute_fom(..., show_plot=False)` to save plots instead of showing them.
+- **Matplotlib/Tk errors on headless systems**: use CLI flags so interactive plotting is disabled and FOM figures are saved during test/validation, or call `histogram_fitting_compute_fom(..., show_plot=False)` explicitly. The plotting utility automatically falls back to the `Agg` backend if interactive backends are unavailable.
 - **Shape errors**: Ensure `.txt` files are 2D arrays with one pulse per row.
 - **NaN warnings**: Some methods may produce NaNs for certain signals/parameters. The scripts remove NaNs and continue; consider adjusting method hyperparameters.
 - **Unsupervised clustering label flips (ML)**: The ML entry point automatically flips labels when needed via majority voting.
