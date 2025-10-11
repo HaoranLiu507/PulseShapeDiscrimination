@@ -227,9 +227,25 @@ The following transcript shows a typical deep learning classification run:
 
 Results and any saved outputs will appear under `Output/` (method-dependent). For regression tasks, you will additionally be asked to select a feature extractor used to compute target PSD factors.
 
+Filter IDs (0–11):
+- 0: No Filter
+- 1: Butterworth
+- 2: Chebyshev (Type I)
+- 3: Elliptic
+- 4: Fourier (low‑pass in frequency domain)
+- 5: Least Mean Square (LMS) adaptive
+- 6: Median
+- 7: Morphological (open/close)
+- 8: Moving Average
+- 9: Wavelet (db4)
+- 10: Wiener
+- 11: Windowed‑Sinc (FIR)
+
+Sampling frequency note: for demonstration purposes the main scripts set `fs = 1000` Hz to parameterize filters. If your signals were sampled at a different rate, adjust `fs` (and filter parameters) near the top of each `*_main.py`.
+
 ### Command-line (non-interactive) usage
 
-All main scripts now accept CLI flags. If a required flag is missing, the script will prompt interactively for that item only.
+All main scripts accept CLI flags. If a required flag is missing, the script will prompt interactively for that item only.
 
 - Deep learning (`Deep_learning_main.py`)
   - Flags: `--task {classification,regression}`, `--method <MLP1|MLP2|MLP3|CNNDEEP|CNNFT|CNNSHAL|CNNSP|CNNSTFT|CNNWT|ENN|GRU|LSTM|RNN|TRAN|MAM>`, `--feat <CC|GP|...>` (when task=regression), `--filter {0..11}`, `--train {yes,no}`, `--validate {yes,no}`
@@ -274,21 +290,51 @@ Notes:
 - When any CLI flag is provided, interactive plotting is disabled. The entry scripts save FOM figures to files during test/validation. Some method modules may still attempt plots during training; those are suppressed in CLI mode and may not be saved unless the module passes `show_plot=False`.
 - You can always run `python <main>.py --help` to see the available flags.
 
-Filter IDs (0–11):
-- 0: No Filter
-- 1: Butterworth
-- 2: Chebyshev (Type I)
-- 3: Elliptic
-- 4: Fourier (low‑pass in frequency domain)
-- 5: Least Mean Square (LMS) adaptive
-- 6: Median
-- 7: Morphological (open/close)
-- 8: Moving Average
-- 9: Wavelet (db4)
-- 10: Wiener
-- 11: Windowed‑Sinc (FIR)
+### Noise Simulator Utility
 
-Sampling frequency note: for demonstration purposes the main scripts set `fs = 1000` Hz to parameterize filters. If your signals were sampled at a different rate, adjust `fs` (and filter parameters) near the top of each `*_main.py`.
+Create noisy copies of all `.txt` matrices under `Data/Train`, `Data/Test`, and `Data/Validation` to reach a per‑row target SNR. Optional smoothing and clipping let you control the noise appearance.
+
+- Purpose: Adds Gaussian noise to each waveform row so the requested SNR is met; preserves the first comment header; writes outputs beside inputs as `<name>_noise_SNR<dB>.txt`.
+- Modes:
+  - instant: single (optionally low‑pass filtered) draw scaled to the target noise power.
+  - schedule: split the target noise power into N steps; low‑pass each draw, accumulate, then re‑normalize to the exact target. Supports optional clipping.
+- Flags: `--snr <dB>`, `--mode {instant,schedule}`, `--filter-width <int>` (1 disables), `--schedule-steps <int>`, `--clip-sigma <float>` (0 disables), `--data-root <path>` (default: `Data`), `--seed <int>`.
+
+Examples
+- Instant, correlated noise:
+```bash
+python Utility/noise_simulator.py --snr 10 --mode instant --filter-width 7
+```
+- Schedule with clipping:
+```bash
+python Utility/noise_simulator.py --snr 10 --mode schedule --filter-width 7 --schedule-steps 6 --clip-sigma 3
+```
+- Disable clipping in either mode: add `--clip-sigma 0`.
+
+### Pile-up Simulator Utility
+
+Generate synthetic pile-up waveforms by superimposing pairs of signals with random amplitude scaling and time shifts. Processes all `.txt` matrices under `Data/<splits>`.
+
+- Purpose: Synthesizes pile-up rows per discovered class pair/variant; preserves the first comment header; writes outputs beside inputs.
+- Pairing & outputs:
+  - same-class: `<stem>_pileup.txt`
+  - cross-class: `<variant>_pileup_<classA>_<classB>.txt`
+  - optional metadata (CSV): per-row indices, amplitude, shift
+- Controls: `--factor <float>` (multiplier; prompted if omitted), `--amplitude MIN MAX` (default: 0.5 1.5), `--shift MIN MAX` (default: 10 100), `--splits ...` (default: Train Test Validation), `--data-root <path>` (default: Data), `--seed <int>`, `--save-metadata`.
+
+- Parameter behavior:
+  - amplitude: scales the second waveform before addition (>1 amplifies, <1 attenuates).
+  - shift: delays the second waveform by N samples before summation (0 = no delay).
+
+Examples
+- Basic run:
+```bash
+python Utility/pileup_simulator.py --factor 0.5
+```
+- Custom ranges with metadata:
+```bash
+python Utility/pileup_simulator.py --factor 1.0 --amplitude 0.6 1.4 --shift 15 120 --save-metadata
+```
 
 ### General Workflow
 
