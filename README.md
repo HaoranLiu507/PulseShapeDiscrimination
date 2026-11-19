@@ -26,13 +26,25 @@
 
 The Pulse Shape Discrimination (PSD) project is a comprehensive Python/MATLAB toolbox for discriminating between different types of radiation particles based on their pulse shapes in scintillation detector signals. PSD is critical in radiation detection for nuclear security, medical physics, and scientific research.
 
-- If you find our work useful in your research or publication, please cite our work:
+If you use this toolbox in your research, please cite the published article:
 
-- Haoran Liu, Yihan Zhan, Mingzhe Liu, Yanhua Liu, Peng Li, Zhuo Zuo, Bingqi Liu, and Runxi Liu. **"Pulse Shape Discrimination Algorithms: Survey and Benchmark."** *arXiv preprint* arXiv:2508.02750, 2025. [[arXiv](https://arxiv.org/abs/2508.02750)]
+Haoran Liu, Yihan Zhan, Mingzhe Liu, Yanhua Liu, Peng Li, Zhuo Zuo, Bingqi Liu, and Runxi Liu. **Pulse shape discrimination algorithms: Survey and benchmark.** *Radiation Measurements*, 193 (2026), 107653. [Published article](https://doi.org/10.1016/j.radmeas.2026.107653) · [arXiv preprint](https://arxiv.org/abs/2508.02750)
+
+```bibtex
+@article{liu2026pulse,
+  author = {Liu, Haoran and Zhan, Yihan and Liu, Mingzhe and Liu, Yanhua and Li, Peng and Zuo, Zhuo and Liu, Bingqi and Liu, Runxi},
+  title = {Pulse shape discrimination algorithms: Survey and benchmark},
+  journal = {Radiation Measurements},
+  year = {2026},
+  volume = {193},
+  pages = {107653},
+  doi = {10.1016/j.radmeas.2026.107653}
+}
+```
 
 ## Project Description
 
-This toolbox implements a broad collection of PSD algorithms spanning statistical time/frequency-domain methods, neural models, classic machine learning, and modern deep learning. Neutron vs. gamma discrimination is provided as a default demo. With your own datasets, other particle types can be used as well. For detailed discussions and benchmarking across methods, see our survey: [[arXiv](https://arxiv.org/abs/2508.02750)].
+This toolbox implements a broad collection of PSD algorithms spanning statistical time/frequency-domain methods, neural models, classic machine learning, and modern deep learning. Neutron vs. gamma discrimination is provided as a default demo. With your own datasets, other particle types can be used as well. For detailed discussions and benchmarking across methods, see the [published survey](https://doi.org/10.1016/j.radmeas.2026.107653) or the [arXiv preprint](https://arxiv.org/abs/2508.02750).
 
 ### Key Features
 
